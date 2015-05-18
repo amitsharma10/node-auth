@@ -12,13 +12,6 @@ var configAuth = require('./auth'); // use this one for testing
 
 module.exports = function(passport) {
 
-    // =========================================================================
-    // passport session setup ==================================================
-    // =========================================================================
-    // required for persistent login sessions
-    // passport needs ability to serialize and unserialize users out of session
-
-    // used to serialize the user for the session
     passport.serializeUser(function(user, done) {
         done(null, user.id);
     });
@@ -30,9 +23,6 @@ module.exports = function(passport) {
         });
     });
 
-    // =========================================================================
-    // LOCAL LOGIN =============================================================
-    // =========================================================================
     passport.use('local-login', new LocalStrategy({
         // by default, local strategy uses username and password, we will override with email
         usernameField : 'email',
@@ -65,9 +55,6 @@ module.exports = function(passport) {
 
     }));
 
-    // =========================================================================
-    // LOCAL SIGNUP ============================================================
-    // =========================================================================
     passport.use('local-signup', new LocalStrategy({
         // by default, local strategy uses username and password, we will override with email
         usernameField : 'email',
@@ -114,7 +101,7 @@ module.exports = function(passport) {
                 User.findOne({ 'local.email' :  email }, function(err, user) {
                     if (err)
                         return done(err);
-                    
+
                     if (user) {
                         return done(null, false, req.flash('loginMessage', 'That email is already taken.'));
                         // Using 'loginMessage instead of signupMessage because it's used by /connect/local'
@@ -125,7 +112,7 @@ module.exports = function(passport) {
                         user.save(function (err) {
                             if (err)
                                 return done(err);
-                            
+
                             return done(null,user);
                         });
                     }
@@ -139,9 +126,6 @@ module.exports = function(passport) {
 
     }));
 
-    // =========================================================================
-    // FACEBOOK ================================================================
-    // =========================================================================
     passport.use(new FacebookStrategy({
 
         clientID        : configAuth.facebookAuth.clientID,
@@ -218,21 +202,19 @@ module.exports = function(passport) {
 
     }));
 
-    // =========================================================================
-    // TWITTER =================================================================
-    // =========================================================================
     passport.use(new TwitterStrategy({
 
-        consumerKey     : configAuth.twitterAuth.consumerKey,
-        consumerSecret  : configAuth.twitterAuth.consumerSecret,
+        consumerKey     : configAuth.twitterAuth.clientID,
+        consumerSecret  : configAuth.twitterAuth.clientSecret,
         callbackURL     : configAuth.twitterAuth.callbackURL,
-        passReqToCallback : true // allows us to pass in the req from our route (lets us check if a user is logged in or not)
+        passReqToCallback : true
 
     },
     function(req, token, tokenSecret, profile, done) {
 
         // asynchronous
         process.nextTick(function() {
+            console.log(req)
 
             // check if the user is already logged in
             if (!req.user) {
@@ -247,6 +229,7 @@ module.exports = function(passport) {
                             user.twitter.token       = token;
                             user.twitter.username    = profile.username;
                             user.twitter.displayName = profile.displayName;
+                            user.twitter.secret = tokenSecret
 
                             user.save(function(err) {
                                 if (err)
@@ -265,6 +248,7 @@ module.exports = function(passport) {
                         newUser.twitter.token       = token;
                         newUser.twitter.username    = profile.username;
                         newUser.twitter.displayName = profile.displayName;
+                        user.twitter.secret = tokenSecret
 
                         newUser.save(function(err) {
                             if (err)
@@ -283,6 +267,7 @@ module.exports = function(passport) {
                 user.twitter.token       = token;
                 user.twitter.username    = profile.username;
                 user.twitter.displayName = profile.displayName;
+                user.twitter.secret = tokenSecret
 
                 user.save(function(err) {
                     if (err)
