@@ -30,6 +30,6 @@ Time spent: `30`
 
 ### Walkthrough
 ## Facebook
-![Video Walkthrough](facebook.gif)
+![GIF](facebook.gif)
 
 
