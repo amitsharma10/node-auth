@@ -29,7 +29,7 @@ Time spent: `30`
 - [ ] User can click a "Next" button at the bottom to load more 
 
 ### Walkthrough
-
-![Video Walkthrough](...)
+## Facebook
+![Video Walkthrough](facebook.gif)
 
 
