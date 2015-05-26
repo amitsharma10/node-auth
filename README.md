@@ -32,4 +32,7 @@ Time spent: `30`
 ## Facebook
 ![GIF](facebook.gif)
 
+## Twitter
+![GIF](twitter.gif)
+
 
