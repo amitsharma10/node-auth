@@ -1,27 +1,35 @@
-# Easy Node Authentication
+## Social Feed
 
-Code for the entire scotch.io tutorial series: Complete Guide to Node Authentication
+This is a aggregated Social Feed app for consumer Facebook, Google, and Twitter in a single Timeline.
 
-We will be using Passport to authenticate users locally, with Facebook, Twitter, and Google.
 
-#### Upgraded To Express 4.0
-This tutorial has been upgraded to use ExpressJS 4.0. See [the commit](https://github.com/scotch-io/easy-node-authentication/commit/020dea057d5a0664caaeb041b18978237528f9a3) for specific changes.
+Time spent: `<Number of hours spent>`
 
-## Instructions
+### Features
 
-If you would like to download the code and try it for yourself:
+#### Required
 
-1. Clone the repo: `git clone git@github.com:scotch-io/easy-node-authentication`
-2. Install packages: `npm install`
-3. Change out the database configuration in config/database.js
-4. Change out auth keys in config/auth.js
-5. Launch: `node server.js`
-6. Visit in your browser at: `http://localhost:8080`
+- [X] User can sign in and connect to Facebook, Google and Twitter using `passport`
+- [X] User can view the last 20 posts on their aggregated timeline
+- [X] The current signed in user will be persisted across server restarts
+- [X] In the home timeline, user can view posts with the user profile picture, username, content, origin social network and timestamp.
+- [X] In the timeline, user can like and unlike posts.
+- [X] User can click share in the timeline, and share with a custom message on a separate page.
+- [X] User can click reply in the timeline, and submit a reply on a separate page.
+- [X] User can click compose anywhere, and submit a new post on a separate page.
+- [X] When composing, user can select to which networks to post.
 
-## The Tutorials
 
-- [Getting Started and Local Authentication](http://scotch.io/tutorials/javascript/easy-node-authentication-setup-and-local)
-- [Facebook](http://scotch.io/tutorials/javascript/easy-node-authentication-facebook)
-- [Twitter](http://scotch.io/tutorials/javascript/easy-node-authentication-twitter)
-- [Google](http://scotch.io/tutorials/javascript/easy-node-authentication-google)
-- [Linking All Accounts Together](http://scotch.io/tutorials/javascript/easy-node-authentication-linking-all-accounts-together)
+### Optional
+
+- [ ] User can click a post and view it on a separate page with controls to share, like, and reply.
+- [ ] User should be able to unshare their posts.
+- [ ] User should be able to delete their posts.
+- [ ] Replies should be prefixed with the username and link to the conversation thread.
+- [ ] User can click a "Next" button at the bottom to load more 
+
+### Walkthrough
+
+![Video Walkthrough](...)
+
+
