@@ -1,8 +1,9 @@
 let Twitter = require("twitter")
 let fbgraph = require("fbgraph")
 let then = require('express-then')
-var google = require('googleapis')
-var mirror = google.mirror('v1')
+let _ = require('lodash')
+
+var underscore = require("underscore")
 
 
 function isLoggedIn(req, res, next) {
@@ -183,6 +184,7 @@ module.exports = function (app, passport) {
 
     app.get("/timeline", isLoggedIn, then(async (req, res) => {
         try {
+            // TWITTER
             var twitter = buildTwitterObject(req)
             let [tweets] = await twitter.promise.get("statuses/home_timeline")
             let posts = tweets.map(tweet => {
@@ -200,19 +202,39 @@ module.exports = function (app, passport) {
                     }
                 }
             })
+
+            // FACEBOOK
             fbgraph.setAccessToken(req.user.facebook.token)
-
             let fbPosts = await fbgraph.promise.get("me/feed")
+            let fbPostsObjects = fbPosts.data.map(fbPost=> {
+                var liked = false
+                if (fbPost.likes && fbPost.likes.data.length > 0) {
+                    liked = _.find(fbPost.likes.data, function (data) {
+                        return data.id === req.user.facebook.id
+                    }) ? true : false
+                }
 
-
-            let fbPostsObjects = posts = fbPosts['data'].map(fbPost=> {
+                console.log({
+                    id: fbPost.id,
+                    image: fbPost.picture,
+                    text: fbPost.description ? fbPost.description : fbPost.message ? fbPost.message : "",
+                    name: fbPost.from.name,
+                    username: fbPost.name ? fbPost.name : fbPost.from.name,
+                    liked: liked,
+                    link: fbPost.link,
+                    network: {
+                        icon: 'facebook',
+                        name: 'Facebook',
+                        class: 'btn-primary'
+                    }
+                })
                 return {
                     id: fbPost.id,
                     image: fbPost.picture,
                     text: fbPost.description ? fbPost.description : fbPost.message ? fbPost.message : "",
                     name: fbPost.from.name,
                     username: fbPost.name ? fbPost.name : fbPost.from.name,
-                    liked: fbPost.likes && fbPost.likes.data.length > 0,
+                    liked: liked,
                     link: fbPost.link,
                     network: {
                         icon: 'facebook',
@@ -222,17 +244,6 @@ module.exports = function (app, passport) {
                 }
             })
             posts = posts.concat(fbPostsObjects)
-
-            /*fbPosts.map(fbPost=>{
-             return {
-             id = fbPost.
-             }
-             });*/
-
-
-            /*let fbposts = await fbgraph.promise.post(req.user.facebook.id + '/feed?access_token' + req.user.facebook.token);
-             console.log(fbposts)*/
-
             res.render("timeline.ejs", {
                 posts: posts
             })

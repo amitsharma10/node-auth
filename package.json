@@ -28,6 +28,7 @@
     "passport-twitter": "^1.0.3",
     "require-dir": "^0.3.0",
     "songbird": "^1.0.1",
-    "twitter": "^1.2.5"
+    "twitter": "^1.2.5",
+    "underscore": "^1.8.3"
   }
 }

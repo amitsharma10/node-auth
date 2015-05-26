@@ -14,6 +14,12 @@
             color: inherit;
         }
 
+        img {
+            width: 48px;
+            height: auto;
+        }
+
+
     </style>
 </head>
 <body>
@@ -31,14 +37,24 @@
     <% if (typeof message !== 'undefined' && message.length > 0) { %>
     <div class="alert alert-danger"><%= message %></div>
     <% } %>
+    <h3>
+        <div class="col-xs-2"> </div>
+        <div class="col-lg-2"><input onchange="onChange(this)" type="checkbox" name="Facebook" value="facebook" checked>
+            Facebook
+        </div>
+        <div class="col-xs-2"><input onchange="onChange(this)" type="checkbox" name="Twitter" value="twitter" checked>
+            Twitter<br></div>
+        <br>
+
+    </h3>
 
     <% for(var post, i = 0; post = posts[i]; i++) { %>
-    <div class="row well">
+    <div class="row well <%= post.network.name %>">
 
-        <div>
+        <div class="col-xs-2">
             <img src="<%= post.image %>"/>
         </div>
-        <div class="col-lg-9">
+        <div class="col-lg-8">
             <div class="row">
                 <p>
                     <strong><%= post.name %></strong> <%= post.username %><br>
@@ -77,5 +93,13 @@
             }
         })
     })
+
+    function onChange(obj) {
+        if (obj.checked) {
+            $("." + obj.name).show();
+        } else {
+            $("." + obj.name).hide();
+        }
+    }
 </script>
 </html>
