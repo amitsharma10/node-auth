@@ -49,8 +49,6 @@ module.exports = function (app, passport) {
     }
 
 
-    var posts = require('../data/posts')
-
     app.get("/", function (req, res) {
         res.render("index.ejs")
     })
@@ -208,7 +206,6 @@ module.exports = function (app, passport) {
 
 
             let fbPostsObjects = posts = fbPosts['data'].map(fbPost=> {
-                if (fbPost.likes)console.log(fbPost.likes.data.length)
                 return {
                     id: fbPost.id,
                     image: fbPost.picture,
@@ -216,6 +213,7 @@ module.exports = function (app, passport) {
                     name: fbPost.from.name,
                     username: fbPost.name ? fbPost.name : fbPost.from.name,
                     liked: fbPost.likes && fbPost.likes.data.length > 0,
+                    link: fbPost.link,
                     network: {
                         icon: 'facebook',
                         name: 'Facebook',
@@ -246,7 +244,6 @@ module.exports = function (app, passport) {
 
     app.post("/like/:id", isLoggedIn, then(async (req, res) => {
         try {
-            console.log(req.query.network)
             if (req.query.network === 'Facebook') {
 
                 await fbgraph.promise.post(req.params.id + '/likes')
@@ -264,7 +261,7 @@ module.exports = function (app, passport) {
 
 
     app.post("/unlike/:id", isLoggedIn, then(async (req, res) => {
-        console.log(req.query.network)
+
         if (req.query.network === 'Facebook') {
             await fbgraph.promise.del(req.params.id + '/likes')
         } else {
@@ -279,7 +276,7 @@ module.exports = function (app, passport) {
 
     app.get("/reply/:id", isLoggedIn, then(async (req, res) => {
         let id = req.params.id
-        console.log(req.param('network'))
+
         res.render("reply.ejs", {
             id: id,
             network: req.param('network'),
@@ -289,7 +286,7 @@ module.exports = function (app, passport) {
 
     app.post("/reply/:id", isLoggedIn, then(async (req, res) => {
         try {
-            console.log(req.query.network)
+
             if (req.query.network === 'Facebook') {
                 console.log('Facebook Message ')
                 await fbgraph.promise.post(req.params.id + '/comments', {'message': req.body.message})
@@ -310,14 +307,15 @@ module.exports = function (app, passport) {
     app.get("/share/:id", isLoggedIn, then(async (req, res) => {
         try {
             if (req.param('network') === 'Facebook') {
-                console.log('about to change FB')
-                await fbgraph.promise.post('/' + req.params.id)
+                fbgraph.setAccessToken(req.user.facebook.token)
+                await fbgraph.promise.post('me/feed', {link: req.param('link'), message: "Test Share"})
+
             } else if (req.param('network') === 'Twitter') {
                 var twitter = buildTwitterObject(req)
                 let id = req.params.id
                 await twitter.promise.post('statuses/retweet/' + id)
             }
-            res.redirect('/timeline', req)
+            res.redirect('/timeline')
         } catch (e) {
             console.log(e)
         }

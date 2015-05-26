@@ -50,7 +50,8 @@
                    name="like<%= post.id %>?network=<%= post.network.name %>"></i>
                 <a href="/reply/<%= post.id %>?user=<%= post.username %>&network=<%= post.network.name %>"
                    class="fa fa-reply fa-2x"></a>
-                <a href="/share/<%= post.id %>?network=<%= post.network.name %>" class="fa fa-share-square-o fa-2x"></a>
+                <a href="/share/<%= post.id %>?network=<%= post.network.name %>&link=<%= post.link %>"
+                   class="fa fa-share-square-o fa-2x"></a>
             </div>
         </div>
         <div class="col-xs-2">
