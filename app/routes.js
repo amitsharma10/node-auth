@@ -1,5 +1,9 @@
 let Twitter = require("twitter")
+let fbgraph = require("fbgraph")
 let then = require('express-then')
+var google = require('googleapis')
+var mirror = google.mirror('v1')
+
 
 function isLoggedIn(req, res, next) {
     if (req.isAuthenticated())
@@ -17,7 +21,31 @@ module.exports = function (app, passport) {
             access_token_key: req.user.twitter.token,
             access_token_secret: req.user.twitter.secret
         })
+        return twitter
+    }
+
+    function buildTwitterObject(req) {
+        var twitter = new Twitter({
+            consumer_key: authIDs.twitterAuth.clientID,
+            consumer_secret: authIDs.twitterAuth.clientSecret,
+            access_token_key: req.user.twitter.token,
+            access_token_secret: req.user.twitter.secret
+        })
         return twitter;
+    }
+
+
+    let networks = {
+        twitter: {
+            icon: 'twitter',
+            name: 'Twitter',
+            class: 'btn-info'
+        },
+        facebook: {
+            icon: 'facebook',
+            name: 'Facebook',
+            class: 'btn-primary'
+        }
     }
 
 
@@ -60,7 +88,7 @@ module.exports = function (app, passport) {
         failureFlash: true // allow flash messages
     }))
 
-    app.get("/auth/facebook", passport.authenticate("facebook", {scope: "email"}))
+    app.get("/auth/facebook", passport.authenticate("facebook", {scope: ['email', 'manage_pages', 'publish_pages', 'user_posts', 'user_photos', 'read_stream', 'public_profile', 'user_likes', 'publish_actions']}))
 
 
     app.get("/auth/facebook/callback",
@@ -98,7 +126,7 @@ module.exports = function (app, passport) {
         failureFlash: true // allow flash messages
     }))
 
-    app.get("/connect/facebook", passport.authorize("facebook", {scope: "email"}))
+    app.get("/connect/facebook", passport.authorize("facebook", {scope: ['email', 'manage_pages', 'publish_pages', 'user_posts', 'user_photos', 'read_stream', 'public_profile', 'user_likes', 'publish_actions']}))
 
     app.get("/connect/facebook/callback",
         passport.authorize("facebook", {
@@ -156,35 +184,78 @@ module.exports = function (app, passport) {
     })
 
     app.get("/timeline", isLoggedIn, then(async (req, res) => {
-        var twitter = buildTwitterObject(req)
-        let [tweets] = await twitter.promise.get("statuses/home_timeline")
-        let posts = tweets.map(tweet => {
-            return {
-                id: tweet.id_str,
-                image: tweet.user.profile_image_url,
-                text: tweet.text,
-                name: tweet.user.name,
-                username: '@' + tweet.user.screen_name,
-                liked: tweet.favorited,
-                network: {
-                    icon: 'twitter',
-                    name: 'Twitter',
-                    class: 'btn-info'
+        try {
+            var twitter = buildTwitterObject(req)
+            let [tweets] = await twitter.promise.get("statuses/home_timeline")
+            let posts = tweets.map(tweet => {
+                return {
+                    id: tweet.id_str,
+                    image: tweet.user.profile_image_url,
+                    text: tweet.text,
+                    name: tweet.user.name,
+                    username: '@' + tweet.user.screen_name,
+                    liked: tweet.favorited,
+                    network: {
+                        icon: 'twitter',
+                        name: 'Twitter',
+                        class: 'btn-info'
+                    }
                 }
-            }
-        })
+            })
+            fbgraph.setAccessToken(req.user.facebook.token)
 
-        res.render("timeline.ejs", {
-            posts: posts
-        })
+            let fbPosts = await fbgraph.promise.get("me/feed")
+
+
+            let fbPostsObjects = posts = fbPosts['data'].map(fbPost=> {
+                if (fbPost.likes)console.log(fbPost.likes.data.length)
+                return {
+                    id: fbPost.id,
+                    image: fbPost.picture,
+                    text: fbPost.description ? fbPost.description : fbPost.message ? fbPost.message : "",
+                    name: fbPost.from.name,
+                    username: fbPost.name ? fbPost.name : fbPost.from.name,
+                    liked: fbPost.likes && fbPost.likes.data.length > 0,
+                    network: {
+                        icon: 'facebook',
+                        name: 'Facebook',
+                        class: 'btn-primary'
+                    }
+                }
+            })
+            posts = posts.concat(fbPostsObjects)
+
+            /*fbPosts.map(fbPost=>{
+             return {
+             id = fbPost.
+             }
+             });*/
+
+
+            /*let fbposts = await fbgraph.promise.post(req.user.facebook.id + '/feed?access_token' + req.user.facebook.token);
+             console.log(fbposts)*/
+
+            res.render("timeline.ejs", {
+                posts: posts
+            })
+        } catch (e) {
+            console.log(e)
+        }
     }))
 
 
     app.post("/like/:id", isLoggedIn, then(async (req, res) => {
         try {
-            var twitter = buildTwitterObject(req)
-            let id = req.params.id;
-            await twitter.promise.post('favorites/create', {id})
+            console.log(req.query.network)
+            if (req.query.network === 'Facebook') {
+
+                await fbgraph.promise.post(req.params.id + '/likes')
+            } else {
+                var twitter = buildTwitterObject(req)
+                let id = req.params.id;
+                await twitter.promise.post('favorites/create', {id})
+            }
+
             res.end()
         } catch (e) {
             console.log(e)
@@ -193,25 +264,43 @@ module.exports = function (app, passport) {
 
 
     app.post("/unlike/:id", isLoggedIn, then(async (req, res) => {
-        var twitter = buildTwitterObject(req)
-        let id = req.params.id
-        await twitter.promise.post('favorites/destroy', {id})
+        console.log(req.query.network)
+        if (req.query.network === 'Facebook') {
+            await fbgraph.promise.del(req.params.id + '/likes')
+        } else {
+
+            var twitter = buildTwitterObject(req)
+            let id = req.params.id
+            await twitter.promise.post('favorites/destroy', {id})
+        }
         res.end()
     }))
 
 
     app.get("/reply/:id", isLoggedIn, then(async (req, res) => {
         let id = req.params.id
-        console.log("ID: " + req.param('user'))
-        res.render("reply.ejs", {id: id, username: req.param('user')})
+        console.log(req.param('network'))
+        res.render("reply.ejs", {
+            id: id,
+            network: req.param('network'),
+            username: req.param('network') === 'Twitter' ? req.param('user') : ''
+        })
     }))
 
     app.post("/reply/:id", isLoggedIn, then(async (req, res) => {
         try {
-            var twitter = buildTwitterObject(req)
-            let id = req.params.id
-            let message = req.body.message
-            await twitter.promise.post('statuses/update', {'status': message, 'in_reply_to_status_id': id})
+            console.log(req.query.network)
+            if (req.query.network === 'Facebook') {
+                console.log('Facebook Message ')
+                await fbgraph.promise.post(req.params.id + '/comments', {'message': req.body.message})
+
+            } else if (req.query.network === 'Twitter') {
+
+                var twitter = buildTwitterObject(req)
+                let id = req.params.id
+                let message = req.body.message
+                await twitter.promise.post('statuses/update', {'status': message, 'in_reply_to_status_id': id})
+            }
             res.redirect('/timeline')
         } catch (e) {
             console.log(e)
@@ -220,13 +309,42 @@ module.exports = function (app, passport) {
 
     app.get("/share/:id", isLoggedIn, then(async (req, res) => {
         try {
-            var twitter = buildTwitterObject(req)
-            let id = req.params.id
-            await twitter.promise.post('statuses/retweet/' + id)
+            if (req.param('network') === 'Facebook') {
+                console.log('about to change FB')
+                await fbgraph.promise.post('/' + req.params.id)
+            } else if (req.param('network') === 'Twitter') {
+                var twitter = buildTwitterObject(req)
+                let id = req.params.id
+                await twitter.promise.post('statuses/retweet/' + id)
+            }
             res.redirect('/timeline', req)
         } catch (e) {
             console.log(e)
         }
+    }))
+
+
+    app.get("/compose", isLoggedIn, then(async(req, res)=> {
+        res.render("compose", {networks: networks})
+    }))
+
+    app.post("/compose", isLoggedIn, then(async(req, res)=> {
+        console.log(req.body.reply)
+        console.log(req)
+        if (req.body.network === 'Facebook') {
+            console.log(req.body.reply)
+            fbgraph.setAccessToken(req.user.facebook.token)
+            await fbgraph.promise.post("/me/feed", {
+                "message": req.body.reply
+            })
+
+        } else if (req.body.network === 'Twitter') {
+            var twitter = buildTwitterObject(req)
+            var status = req.body.reply
+            await twitter.promise.post('statuses/update', {status})
+        }
+
+        res.redirect("/timeline")
     }))
 
 

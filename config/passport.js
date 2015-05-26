@@ -139,8 +139,9 @@ module.exports = function(passport) {
         // asynchronous
         process.nextTick(function() {
 
-            // check if the user is already logged in
+               // check if the user is already logged in
             if (!req.user) {
+
 
                 User.findOne({ 'facebook.id' : profile.id }, function(err, user) {
                     if (err)
@@ -327,7 +328,7 @@ module.exports = function(passport) {
                         newUser.google.id    = profile.id;
                         newUser.google.token = token;
                         newUser.google.name  = profile.displayName;
-                        newUser.google.email = (profile.emails[0].value || '').toLowerCase(); // pull the first email
+                        newUser.google.email = (profile.emails[0].value || '').toLowerCase() // pull the first email
 
                         newUser.save(function(err) {
                             if (err)

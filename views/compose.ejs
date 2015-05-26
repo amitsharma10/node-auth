@@ -19,10 +19,7 @@
 <div class="container">
 
     <div class="page-header text-center">
-        <h1><span class="fa fa-reply"></span> Reply</h1>
-        <a href="/compose" class="btn btn-default btn-sm">
-            <i class="fa fa-pencil-square-o"></i>&nbsp;&nbsp;&nbsp;Compose
-        </a>
+        <h1><span class="fa fa-pencil"></span> Compose</h1>
         <a href="/timeline" class="btn btn-default btn-sm">Timeline</a>
         <a href="/profile" class="btn btn-default btn-sm">Profile</a>
         <a href="/logout" class="btn btn-default btn-sm">Logout</a><br><br>
@@ -33,12 +30,18 @@
     <% } %>
 
     <div class="row">
-        <form action="/reply/<%= id %>?network=<%=network%>" method="POST">
+        <form action="/compose" method="post">
             <div class="form-group">
-                <textarea name="message" class="form-control" rows="3" placeholder="Your reply here..."><%= username %>
-                </textarea>
+                <select id="network" name="network">
+                    <option id="Facebook">Facebook</option>
+                    <option id="Twitter">Twitter</option>
+                </select>
+                <br>
             </div>
-            <button type="submit" class="btn btn-default">Reply</button>
+            <div class="form-group">
+                <textarea name="reply" class="form-control" rows="3" placeholder="Compose your post here..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-default">Post</button>
         </form>
     </div>
 </div>
