@@ -15,7 +15,7 @@
     "express-then": "^1.0.2",
     "fbgraph": "^0.3.0",
     "fbgraphapi": "^0.5.0",
-    "googleapis": "^2.0.4",
+    "googleapis": "^59.0.0",
     "googleapis-plus": "^0.8.3",
     "lodash": "^3.8.0",
     "method-override": "^2.3.3",
